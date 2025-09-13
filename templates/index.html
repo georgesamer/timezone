@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Time</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f0f0f0;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            background: #f0f0f0;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+            text-align: left;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 15px;
+            background: linear-gradient(45deg, #f8f9ff, #e8f2ff);
+            border-left: 5px solid #667eea;
+            text-align: left;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .result h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .time-display {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .country-name {
+            font-size: 1.2em;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .timezone {
+            font-size: 0.9em;
+            color: #888;
+            font-style: italic;
+        }
+
+        .difference {
+            background: linear-gradient(45deg, #ff9a9e, #fecfef);
+            color: #333;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .error {
+            color: #e74c3c;
+            background: #ffeaea;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            color: #667eea;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .tab-buttons {
+                flex-direction: column;
+            }
+
+            .time-display {
+                font-size: 1.4em;
+            }
+        }
+
+        .clock-icon {
+            display: inline-block;
+            margin-left: 10px;
+            animation: tick 1s infinite;
+        }
+
+        @keyframes tick {
+            0%, 50% { transform: rotate(0deg); }
+            100% { transform: rotate(6deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+    <h1>🌍 World Time <span class="clock-icon">⏰</span></h1>
+        
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="showTab(event, 'single')">Current Time</button>
+            <button class="tab-btn" onclick="showTab(event, 'compare')">Compare Times</button>
+        </div>
+
+        <!-- Single Country Time Tab -->
+        <div class="tab-content active" id="single">
+            <div class="form-group">
+                <label for="country1">Select country:</label>
+                <select id="country1">
+                    <option value="">-- Select country --</option>
+                    <option value="egypt">Egypt</option>
+                    <option value="usa">United States</option>
+                    <option value="france">France</option>
+                    <option value="germany">Germany</option>
+                    <option value="japan">Japan</option>
+                    <option value="china">China</option>
+                    <option value="india">India</option>
+                    <option value="brazil">Brazil</option>
+                    <option value="canada">Canada</option>
+                    <option value="australia">Australia</option>
+                    <option value="russia">Russia</option>
+                    <option value="uk">United Kingdom</option>
+                    <option value="italy">Italy</option>
+                    <option value="spain">Spain</option>
+                    <option value="saudi arabia">Saudi Arabia</option>
+                    <option value="turkey">Turkey</option>
+                    <option value="south africa">South Africa</option>
+                </select>
+            </div>
+                <button onclick="getCountryTime()">🕐 Show Time</button>
+            <div id="single-result"></div>
+        </div>
+
+        <!-- Compare Countries Tab -->
+        <div class="tab-content" id="compare">
+            <div class="form-group">
+                <label for="country2">First country:</label>
+                <select id="country2">
+                    <option value="">-- Select country --</option>
+                    <option value="egypt">Egypt</option>
+                    <option value="usa">United States</option>
+                    <option value="france">France</option>
+                    <option value="germany">Germany</option>
+                    <option value="japan">Japan</option>
+                    <option value="china">China</option>
+                    <option value="india">India</option>
+                    <option value="brazil">Brazil</option>
+                    <option value="canada">Canada</option>
+                    <option value="australia">Australia</option>
+                    <option value="russia">Russia</option>
+                    <option value="uk">United Kingdom</option>
+                    <option value="italy">Italy</option>
+                    <option value="spain">Spain</option>
+                    <option value="saudi arabia">Saudi Arabia</option>
+                    <option value="turkey">Turkey</option>
+                    <option value="south africa">South Africa</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="country3">Second country:</label>
+                <select id="country3">
+                    <option value="">-- Select country --</option>
+                    <option value="egypt">Egypt</option>
+                    <option value="usa">United States</option>
+                    <option value="france">France</option>
+                    <option value="germany">Germany</option>
+                    <option value="japan">Japan</option>
+                    <option value="china">China</option>
+                    <option value="india">India</option>
+                    <option value="brazil">Brazil</option>
+                    <option value="canada">Canada</option>
+                    <option value="australia">Australia</option>
+                    <option value="russia">Russia</option>
+                    <option value="uk">United Kingdom</option>
+                    <option value="italy">Italy</option>
+                    <option value="spain">Spain</option>
+                    <option value="saudi arabia">Saudi Arabia</option>
+                    <option value="turkey">Turkey</option>
+                    <option value="south africa">South Africa</option>
+                </select>
+            </div>
+            
+            <button onclick="compareCountries()">⚖️ Compare Times</button>
+            <div id="compare-result"></div>
+        </div>
+    </div>
+
+    <script>
+    // Country data mapping (Arabic labels replaced with English values)
+        const COUNTRY_DATA = {
+            'egypt': { name: 'Egypt', city: 'Cairo', timezone: 'Africa/Cairo' },
+            'usa': { name: 'United States', city: 'Washington', timezone: 'America/New_York' },
+            'france': { name: 'France', city: 'Paris', timezone: 'Europe/Paris' },
+            'germany': { name: 'Germany', city: 'Berlin', timezone: 'Europe/Berlin' },
+            'japan': { name: 'Japan', city: 'Tokyo', timezone: 'Asia/Tokyo' },
+            'china': { name: 'China', city: 'Beijing', timezone: 'Asia/Shanghai' },
+            'india': { name: 'India', city: 'New Delhi', timezone: 'Asia/Kolkata' },
+            'brazil': { name: 'Brazil', city: 'Brasilia', timezone: 'America/Sao_Paulo' },
+            'canada': { name: 'Canada', city: 'Ottawa', timezone: 'America/Toronto' },
+            'australia': { name: 'Australia', city: 'Canberra', timezone: 'Australia/Sydney' },
+            'russia': { name: 'Russia', city: 'Moscow', timezone: 'Europe/Moscow' },
+            'uk': { name: 'United Kingdom', city: 'London', timezone: 'Europe/London' },
+            'italy': { name: 'Italy', city: 'Rome', timezone: 'Europe/Rome' },
+            'spain': { name: 'Spain', city: 'Madrid', timezone: 'Europe/Madrid' },
+            'saudi arabia': { name: 'Saudi Arabia', city: 'Riyadh', timezone: 'Asia/Riyadh' },
+            'turkey': { name: 'Turkey', city: 'Ankara', timezone: 'Europe/Istanbul' },
+            'south africa': { name: 'South Africa', city: 'Pretoria', timezone: 'Africa/Johannesburg' }
+        };
+
+    function showTab(ev, tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked button
+            if (ev && ev.currentTarget) {
+                ev.currentTarget.classList.add('active');
+            } else if (ev && ev.target) {
+                ev.target.classList.add('active');
+            }
+            
+            // Clear results
+            document.getElementById('single-result').innerHTML = '';
+            document.getElementById('compare-result').innerHTML = '';
+        }
+
+        function formatTime(date, timezone) {
+            return new Intl.DateTimeFormat('en-US', {
+                timeZone: timezone,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            }).format(date);
+        }
+
+        async function getCountryTime() {
+            const countryKey = document.getElementById('country1').value;
+            const resultDiv = document.getElementById('single-result');
+
+            if (!countryKey) {
+                resultDiv.innerHTML = '<div class="result error">⚠️ Please select a country first</div>';
+                return;
+            }
+
+                resultDiv.innerHTML = '<div class="result loading">... loading</div>';
+
+            try {
+                const resp = await fetch('/api/time', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ country: countryKey })
+                });
+
+                const data = await resp.json();
+
+                if (!resp.ok || !data.success) {
+                    const msg = data && data.error ? data.error : 'Server call error';
+                    resultDiv.innerHTML = `<div class="result error">❌ ${msg}</div>`;
+                    return;
+                }
+
+                resultDiv.innerHTML = `
+                    <div class="result">
+                        <h3>🕒 Current Time</h3>
+                        <div class="country-name">${data.city}, ${data.country}</div>
+                        <div class="time-display">${data.time}</div>
+                        <div class="timezone">${data.timezone}</div>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function compareCountries() {
+            const country1Key = document.getElementById('country2').value;
+            const country2Key = document.getElementById('country3').value;
+            const resultDiv = document.getElementById('compare-result');
+
+                if (!country1Key || !country2Key) {
+                resultDiv.innerHTML = '<div class="result error">⚠️ Please select both countries</div>';
+                return;
+            }
+
+                if (country1Key === country2Key) {
+                resultDiv.innerHTML = '<div class="result error">⚠️ Please select two different countries</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="result loading">... comparing</div>';
+
+            try {
+                const resp = await fetch('/api/compare', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ country1: country1Key, country2: country2Key })
+                });
+
+                const data = await resp.json();
+
+                if (!resp.ok || !data.success) {
+                    const msg = data && data.error ? data.error : 'Server call error';
+                    resultDiv.innerHTML = `<div class="result error">❌ ${msg}</div>`;
+                    return;
+                }
+
+                const diff = data.time_difference;
+                const differenceText = diff.same_timezone ? 'Same timezone 🕐' : `Time difference: ${diff.hours} hours and ${diff.minutes} minutes ⏰`;
+
+                resultDiv.innerHTML = `
+                    <div class="result">
+                        <h3>⚖️ Time Comparison</h3>
+                        
+                        <div style="margin: 20px 0; text-align: right;">
+                            <div class="country-name">${data.country1.city}, ${data.country1.name}</div>
+                            <div class="time-display">${data.country1.time}</div>
+                        </div>
+                        
+                        <div style="margin: 20px 0; text-align: right;">
+                            <div class="country-name">${data.country2.city}, ${data.country2.name}</div>
+                            <div class="time-display">${data.country2.time}</div>
+                        </div>
+
+                        <div class="difference">${differenceText}</div>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-refresh time every minute
+        setInterval(() => {
+            const singleResult = document.getElementById('single-result');
+            const compareResult = document.getElementById('compare-result');
+            
+            if (singleResult.innerHTML !== '' && !singleResult.innerHTML.includes('error')) {
+                getCountryTime();
+            }
+            
+            if (compareResult.innerHTML !== '' && !compareResult.innerHTML.includes('error')) {
+                compareCountries();
+            }
+        }, 60000);
+    </script>
+</body>
+</html>
